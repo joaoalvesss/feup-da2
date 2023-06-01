@@ -170,34 +170,11 @@ std::vector<int> Graph::dfs(int id) {
         }
     }
     return res;
-
-
-    /*std::vector<int> res;
-    Vertex *src = findVertex(id);
-    res.push_back(id);
-    src->setVisited(true);
-    std::queue<Vertex *> q;
-    q.push(src);
-    while (!q.empty()) {
-        Vertex *v = q.front();
-        q.pop();
-        for (auto e : v->getAdj()) {
-            if (!e->getDestiny()->isVisited()) {
-                q.push(e->getDestiny());
-                res.push_back(e->getDestiny()->getId());
-                e->getDestiny()->setVisited(true);
-            }
-        }
-    }
-    return res;*/
 }
 
 double Graph::triangularApproximation(std::vector<int> &path) {
-    // Create the MST using Prim's algorithm
     Vertex *parent = findVertex(0);
     Graph mst = prim(0);
-
-    // Perform DFS traversal to obtain the order of visited cities
     mst.resetVisits();
     path = mst.dfs(parent->getId());
     path.push_back(parent->getId());
@@ -284,16 +261,18 @@ Graph Graph::minimumWeightPerfectMatching() {
             unmatched.erase(closestVertex);
             matched.insert(v);
             matched.insert(closestVertex);
-            Vertex* v1 = findVertex(v);
-            Vertex* v2 = findVertex(closestVertex);
-            if (v1 != nullptr && v2 != nullptr) {
-                cout << v << " -> " << closestVertex << endl;
-                matching.addEdge(v, closestVertex, minDistance);
-                cout << "Entrou" << endl;
-                cout << matching.vertexSet.size() << endl;
-            }
+            matching.addVertex(v, vertexSet[v]->getLongitude(), vertexSet[v]->getLatitude());
+            matching.addVertex(closestVertex, vertexSet[closestVertex]->getLongitude(), vertexSet[closestVertex]->getLatitude());
+            matching.addEdge(v, closestVertex, minDistance);
         }
     }
+
+    cout << "\tMatching vertexes: ";
+    for(auto aux : matching.vertexSet){
+        cout << aux.second->getId() << " ";
+    }
+
+    cout << endl;
     return matching;
 }
 
@@ -314,28 +293,31 @@ std::vector<int> Graph::findEulerianCircuit() {
         adjacencyList[id] = neighbors;
     }
 
-    int startVertex = vertexSet.begin()->first;
     std::stack<int> stack;
-    std::vector<int> circuitTemp;
+    std::vector<int> eulerianPath;
+
+    int startVertex = vertexSet.begin()->first;
     stack.push(startVertex);
 
     while (!stack.empty()) {
         int v = stack.top();
 
         if (!adjacencyList[v].empty()) {
-            stack.push(adjacencyList[v].back());
+            int u = adjacencyList[v].back();
+            stack.push(u);
             adjacencyList[v].pop_back();
         } else {
-            circuitTemp.push_back(v);
+            eulerianPath.push_back(v);
             stack.pop();
         }
     }
 
-    for (auto it = circuitTemp.rbegin(); it != circuitTemp.rend(); ++it)
+    for (auto it = eulerianPath.rbegin(); it != eulerianPath.rend(); ++it)
         circuit.push_back(*it);
 
     return circuit;
 }
+
 
 // Christofides algorithm to find an approximate Hamiltonian path
 std::vector<int> Graph::christofides() {
@@ -368,6 +350,12 @@ std::vector<int> Graph::christofides() {
         }
     }
 
+    cout << "\tSubgraph vertexes before insert: ";
+    for(auto aux : subgraph.vertexSet){
+        cout << aux.second->getId() << " ";
+    }
+    cout << endl;
+
     // Step 3: Find the Eulerian circuit in the subgraph
     std::vector<int> circuit = subgraph.findEulerianCircuit();
 
@@ -381,146 +369,4 @@ std::vector<int> Graph::christofides() {
     }
 
     return path;
-}
-
-
-// Function to find the minimum weighted perfect matching in the graph
-Graph Graph::findMinimumWeightedPerfectMatching(Graph& graph) {
-    std::unordered_set<int> oddVertices;
-    for (const auto& vertex : graph.getVertexSet()) {
-        if (vertex.second->getAdj().size() % 2 == 1) {
-            oddVertices.insert(vertex.first);
-        }
-    }
-
-    Graph mst = graph.prim(0);  // Minimum spanning tree of the graph
-    Graph oddDegreeGraph;
-    for (const auto& vertex : mst.getVertexSet()) {
-        if (oddVertices.find(vertex.first) != oddVertices.end()) {
-            oddDegreeGraph.addVertex(vertex.second->getId(), vertex.second->getLongitude(), vertex.second->getLatitude());
-        }
-    }
-    for (const auto& vertex : oddDegreeGraph.getVertexSet()) {
-        for (const auto& edge : vertex.second->getAdj()) {
-            oddDegreeGraph.addEdge(edge.second->getOrigin()->getId(), edge.second->getDestiny()->getId(), edge.second->getDistance());
-        }
-    }
-
-    Graph perfectMatching;
-    while (!oddDegreeGraph.getVertexSet().empty()) {
-        int startVertexId = oddDegreeGraph.getVertexSet().begin()->first;
-        Vertex* startVertex = oddDegreeGraph.findVertex(startVertexId);
-        Edge* minEdge = nullptr;
-        double minDistance = std::numeric_limits<double>::max();
-        for (const auto& vertex : oddDegreeGraph.getVertexSet()) {
-            if (vertex.first != startVertexId) {
-                Vertex* currentVertex = oddDegreeGraph.findVertex(vertex.first);
-                double distance = haversine(startVertex->getLatitude(), startVertex->getLongitude(), currentVertex->getLatitude(), currentVertex->getLongitude());
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    minEdge = currentVertex->getAdj().begin()->second;
-                }
-            }
-        }
-        if (minEdge != nullptr) {
-            oddDegreeGraph.removeVertex(minEdge->getOrigin()->getId());
-            oddDegreeGraph.removeVertex(minEdge->getDestiny()->getId());
-            perfectMatching.addEdge(minEdge->getOrigin()->getId(), minEdge->getDestiny()->getId(), minEdge->getDistance());
-        }
-    }
-
-    return perfectMatching;
-}
-
-// Function to perform Eulerian tour on a graph
-std::vector<int> Graph::performEulerianTour(Graph& graph) {
-    std::vector<int> eulerianPath;
-    std::unordered_map<int, std::vector<int>> adjList;
-
-    for (const auto& vertex : graph.getVertexSet()) {
-        for (const auto& edge : vertex.second->getAdj()) {
-            adjList[vertex.first].push_back(edge.second->getDestiny()->getId());
-        }
-    }
-
-    int startVertex = graph.getVertexSet().begin()->first;
-    std::vector<int> stack, path;
-    stack.push_back(startVertex);
-
-    while (!stack.empty()) {
-        int currentVertex = stack.back();
-        if (!adjList[currentVertex].empty()) {
-            int nextVertex = adjList[currentVertex].back();
-            stack.push_back(nextVertex);
-            adjList[currentVertex].pop_back();
-        } else {
-            path.push_back(currentVertex);
-            stack.pop_back();
-        }
-    }
-
-    std::reverse(path.begin(), path.end());
-
-    for (const auto& vertex : path) {
-        eulerianPath.push_back(vertex);
-        for (const auto& edge : graph.findVertex(vertex)->getAdj()) {
-            if (!edge.second->getDestiny()->isVisited()) {
-                edge.second->getDestiny()->setVisited(true);
-                eulerianPath.push_back(edge.second->getDestiny()->getId());
-            }
-        }
-    }
-
-    return eulerianPath;
-}
-
-// Function to remove duplicate vertices from a path
-std::vector<int> Graph::removeDuplicateVertices(const std::vector<int>& path) {
-    std::unordered_set<int> visited;
-    std::vector<int> uniquePath;
-
-    for (const auto& vertex : path) {
-        if (visited.find(vertex) == visited.end()) {
-            uniquePath.push_back(vertex);
-            visited.insert(vertex);
-        }
-    }
-
-    return uniquePath;
-}
-
-// Function to construct a Hamiltonian path from the Eulerian path
-std::vector<int> Graph::constructHamiltonianPath(const std::vector<int>& eulerianPath) {
-    std::vector<int> hamiltonianPath;
-
-    for (const auto& vertex : eulerianPath) {
-        if (std::find(hamiltonianPath.begin(), hamiltonianPath.end(), vertex) == hamiltonianPath.end()) {
-            hamiltonianPath.push_back(vertex);
-        }
-    }
-
-    return hamiltonianPath;
-}
-
-// Function to calculate the approximate solution using the Christofides algorithm
-std::vector<int> Graph::christofidesAlgorithm(Graph& graph) {
-    std::vector<int> path;
-    double totalDistance = graph.triangularApproximation(path);
-    Graph perfectMatching = findMinimumWeightedPerfectMatching(graph);
-
-    for (const auto& edge : perfectMatching.getVertexSet()) {
-        //path.push_back(edge.second->getOrigin()->getId());
-        //path.push_back(edge.second->getDestiny()->getId());
-    }
-
-    std::vector<int> eulerianPath = performEulerianTour(perfectMatching);
-    std::vector<int> hamiltonianPath = constructHamiltonianPath(eulerianPath);
-
-    // Remove duplicate vertices
-    std::vector<int> uniquePath = removeDuplicateVertices(hamiltonianPath);
-
-    // Add the starting vertex to complete the Hamiltonian cycle
-    uniquePath.push_back(uniquePath.front());
-
-    return uniquePath;
 }

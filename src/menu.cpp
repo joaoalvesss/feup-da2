@@ -11,7 +11,7 @@ Menu::Menu(){
     auto start_time = std::chrono::high_resolution_clock::now();
     // utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/stadiums.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/shipping.csv");
-    // utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/tourism.csv");
+    utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/tourism.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Extra_Fully_Connected_Graphs/edges_25.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Extra_Fully_Connected_Graphs/edges_50.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Extra_Fully_Connected_Graphs/edges_75.csv");
@@ -24,7 +24,7 @@ Menu::Menu(){
     // utils::readCsvData_OneFile(graph, "../resources/Extra_Fully_Connected_Graphs/edges_700.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Extra_Fully_Connected_Graphs/edges_800.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Extra_Fully_Connected_Graphs/edges_900.csv");
-    utils::readCsvData_TwoFile(graph, "../resources/Real-world Graphs/graph1/");
+    // utils::readCsvData_TwoFile(graph, "../resources/Real-world Graphs/graph1/");
     // utils::readCsvData_TwoFile(graph, "../resources/Real-world Graphs/graph2/");
     // utils::readCsvData_TwoFile(graph, "../resources/Real-world Graphs/graph3/");
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -92,7 +92,9 @@ void Menu::init() {
             case 3:
             {
                 auto start_time = std::chrono::high_resolution_clock::now();
-                std::vector<int> hamiltonianPath = graph.christofides();
+                Graph helper = graph.prim(0);
+
+                std::vector<int> hamiltonianPath = helper.christofides();
                 hamiltonianPath.push_back(0);
 
                 auto end_time = std::chrono::high_resolution_clock::now();
