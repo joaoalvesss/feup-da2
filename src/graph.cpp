@@ -1,6 +1,5 @@
 #include "../headers/graph.h"
 #include "../headers/utils.h"
-#include "../headers/MutablePriorityQueue.h"
 #include <cmath>
 
 Graph::Graph(){}
@@ -57,10 +56,8 @@ void Graph::addVertex(const int &id, const double& lon, const double& lat) {
     vertexSet.insert({id, v});
 }
 
-void Graph::addEdge(const int &source, const int &dest, double distance) {
-    auto v1 = findVertex(source);
-    auto v2 = findVertex(dest);
-    v1->addEdge(v2, v1, distance);
+void Graph::addEdge(Vertex * source, Vertex * dest, double distance) {
+    source->addEdge(dest, source, distance);
 }
 
 void Graph::addBidirectionalEdge(const int &source, const int &dest, double distance) {
@@ -78,39 +75,39 @@ void Graph::resetVisits() {
     }
 }
 
-    /************************************** 4.1 ***************************************/
+/************************************** 4.1 ***************************************/
 void Graph::tspBT(std::vector<int>& path, std::vector<bool>& visited, std::vector<int>& optimal_path, double& min_cost, double current_cost) {
-        if (path.size() == vertexSet.size()) {
-            int start_vertex = path.front();
-            int last_vertex = path.back();
-            for (auto it : vertexSet[last_vertex]->getAdj()) {
-                if (it.second->getDestiny()->getId() == start_vertex) {
-                    double cycle_cost = current_cost + it.second->getDistance();
-                    if (cycle_cost < min_cost) {
-                        min_cost = cycle_cost;
-                        optimal_path = path;
-                    }
-                    break;
-                }
-            }
-            return;
-        }
-
+    if (path.size() == vertexSet.size()) {
+        int start_vertex = path.front();
         int last_vertex = path.back();
         for (auto it : vertexSet[last_vertex]->getAdj()) {
-            if (!visited[it.second->getDestiny()->getId()]) {
-                path.push_back(it.second->getDestiny()->getId());
-                visited[it.second->getDestiny()->getId()] = true;
-                tspBT(path, visited, optimal_path, min_cost, current_cost + it.second->getDistance());
-                path.pop_back();
-                visited[it.second->getDestiny()->getId()] = false;
+            if (it.second->getDestiny()->getId() == start_vertex) {
+                double cycle_cost = current_cost + it.second->getDistance();
+                if (cycle_cost < min_cost) {
+                    min_cost = cycle_cost;
+                    optimal_path = path;
+                }
+                break;
             }
         }
+        return;
+    }
+
+    int last_vertex = path.back();
+    for (auto it : vertexSet[last_vertex]->getAdj()) {
+        if (!visited[it.second->getDestiny()->getId()]) {
+            path.push_back(it.second->getDestiny()->getId());
+            visited[it.second->getDestiny()->getId()] = true;
+            tspBT(path, visited, optimal_path, min_cost, current_cost + it.second->getDistance());
+            path.pop_back();
+            visited[it.second->getDestiny()->getId()] = false;
+        }
+    }
 }
 
-    /************************************** 4.2 ***************************************/
+/************************************** 4.2 ***************************************/
 
-    Graph Graph::prim(int s) {
+Graph Graph::prim(int s) {
     Vertex * start = findVertex(s);
     MutablePriorityQueue<Vertex> q;
     resetVisits();
@@ -145,7 +142,7 @@ void Graph::tspBT(std::vector<int>& path, std::vector<bool>& visited, std::vecto
     }
     for (auto & i : vertexSet) {
         if (i.second->getPath() != nullptr) {
-            mst.addEdge(i.second->getPath()->getOrigin()->getId(), i.second->getId(), 0);
+            mst.addEdge(i.second->getPath()->getOrigin(), i.second, 0);
         }
     }
     return mst;
@@ -166,34 +163,11 @@ std::vector<int> Graph::dfs(int id) {
         }
     }
     return res;
-
-
-    /*std::vector<int> res;
-    Vertex *src = findVertex(id);
-    res.push_back(id);
-    src->setVisited(true);
-    std::queue<Vertex *> q;
-    q.push(src);
-    while (!q.empty()) {
-        Vertex *v = q.front();
-        q.pop();
-        for (auto e : v->getAdj()) {
-            if (!e->getDestiny()->isVisited()) {
-                q.push(e->getDestiny());
-                res.push_back(e->getDestiny()->getId());
-                e->getDestiny()->setVisited(true);
-            }
-        }
-    }
-    return res;*/
 }
 
 double Graph::triangularApproximation(std::vector<int> &path) {
-    // Create the MST using Prim's algorithm
     Vertex *parent = findVertex(0);
     Graph mst = prim(0);
-
-    // Perform DFS traversal to obtain the order of visited cities
     mst.resetVisits();
     path = mst.dfs(parent->getId());
     path.push_back(parent->getId());
@@ -229,188 +203,11 @@ bool Graph::check_if_nodes_are_connected(int v1, int v2) const{
     for(const auto& it : findVertex(v1)->getAdj()){
         if(it.second->getDestiny()->getId() == v2)
             return true;
-        }
-    return false;
-}
-
-    /************************************** 4.3 ***************************************/
-double Graph::getDistance(int v1, int v2) const {
-    for(auto &it : vertexSet.find(v1)->second->getAdj()) {
-        if(it.second->getDestiny()->getId() == v2) {
-            return it.second->getDistance();
-        }
-    }
-    return 0;
-}
-
-bool Graph::vertexExists(int vertexID){
-    for (const auto& vertex : vertexSet) {
-        if (vertex.second->getId() == vertexID) {
-            return true;
-        }
     }
     return false;
 }
 
-std::vector<int> Graph::findOddDegreeVertices(){
-
-   std::vector<int> oddDegreeVertices;
-
-   for (int vertex = 0; vertex < vertexSet.size(); ++vertex) {
-       if (vertexSet[vertex]->getAdj().size() % 2 != 0) {
-           oddDegreeVertices.push_back(vertex);
-       }
-   }
-
-   return oddDegreeVertices;
-}
-
-void Graph::findEulerianPath(int start_vertex, std::vector<int> &circuit){
-    std::stack<int> stack;
-    stack.push(start_vertex);
-
-    while (!stack.empty()) {
-        int current_vertex = stack.top();
-
-        for(auto it : findVertex(current_vertex)->getAdj()){
-            std::cout <<  "\t" << it.second->getOrigin()->getId() << " -> " << it.second->getDestiny()->getId() << ": dist -> " << it.second->getDistance() << endl;
-        }
-
-        /*if (!vertexSet[current_vertex]->getAdj().empty()) {
-            int next_vertex = vertexSet[current_vertex]->getAdj().back()->getDestiny()->getId();
-            vertexSet[current_vertex]->getAdj().pop_back();
-            stack.push(next_vertex);
-        }
-        else {
-            circuit.push_back(current_vertex);
-            stack.pop();
-        }*/ // ERRO COM O unordered map
-        cout << "\t> CIRCUIT: " << circuit.size() << endl;
-        cout << "\t> STACK: " << stack.size() << endl;
-    }
-}
-
-
-void Graph::buildMstGraph(Graph &mstGraph, const std::vector<std::pair<int, int>>& mst) const{
-    for(auto & i : mst){
-        int v1 = i.first;
-        int v2 = i.second;
-
-        if(v1 == -1 || v2 == -1) continue;
-
-        if(!mstGraph.vertexExists(v1)){
-            mstGraph.addVertex(v1, findVertex(v1)->getLatitude(), findVertex(v1)->getLongitude());
-
-            if(!mstGraph.vertexExists(v2)){
-                mstGraph.addVertex(v2, findVertex(v2)->getLatitude(), findVertex(v2)->getLongitude());
-                if(!mstGraph.check_if_nodes_are_connected(v1, v2)){
-                    double distance = haversine(findVertex(v1)->getLatitude(), findVertex(v1)->getLongitude(), findVertex(v2)->getLatitude(), findVertex(v2)->getLongitude());
-                    if(distance == 0.0) {
-                        mstGraph.addEdge(v1, v2, getDistance(v1, v2));
-                        continue;
-                    }
-                    mstGraph.addEdge(v1, v2, distance);
-                }
-                else{
-                    mstGraph.addEdge(v1, v2, getDistance(v1, v2));
-                }
-            }
-            else{
-                if(!mstGraph.check_if_nodes_are_connected(v1, v2)){
-                    double distance = haversine(findVertex(v1)->getLatitude(), findVertex(v1)->getLongitude(), findVertex(v2)->getLatitude(), findVertex(v2)->getLongitude());
-                    if(distance == 0.0) {
-                        mstGraph.addEdge(v1, v2, getDistance(v1, v2));
-                        continue;
-                    }
-                    mstGraph.addEdge(v1, v2, distance);
-                }
-                else{
-                    mstGraph.addEdge(v1, v2, getDistance(v1, v2));
-                }
-            }
-        }
-        else if(!mstGraph.vertexExists(v2)){
-            mstGraph.addVertex(v2, findVertex(v2)->getLatitude(), findVertex(v2)->getLongitude());
-            if(!mstGraph.check_if_nodes_are_connected(v1, v2)){
-                double distance = haversine(findVertex(v1)->getLatitude(), findVertex(v1)->getLongitude(), findVertex(v2)->getLatitude(), findVertex(v2)->getLongitude());
-                if(distance == 0.0) {
-                    mstGraph.addEdge(v1, v2, getDistance(v1, v2));
-                    continue;
-                }
-                mstGraph.addEdge(v1, v2, distance);
-            }
-            else{
-                mstGraph.addEdge(v1, v2, getDistance(v1, v2));
-            }
-        }
-        else{
-            if(!mstGraph.check_if_nodes_are_connected(v1, v2)){
-                double distance = haversine(findVertex(v1)->getLatitude(), findVertex(v1)->getLongitude(), findVertex(v2)->getLatitude(), findVertex(v2)->getLongitude());
-                if(distance == 0.0) {
-                    mstGraph.addEdge(v1, v2, getDistance(v1, v2));
-                    continue;
-                }
-                mstGraph.addEdge(v1, v2, distance);
-            }
-            else{
-                mstGraph.addEdge(v1, v2, getDistance(v1, v2));
-            }
-        }
-    }
-}
-
-std::vector<std::pair<int, int>> Graph::findOddDegreeVerticesAndConnect(Graph &mstGraph) const{
-    std::vector<int> oddDegreeVertices = mstGraph.findOddDegreeVertices();
-    std::vector<std::pair<int, int>> mpm;
-    std::vector<bool> visited(oddDegreeVertices.size(), false);
-
-    for(int i = 0; i < oddDegreeVertices.size(); i++){
-        double min_distance = std::numeric_limits<double>::max();
-        int nearest_neighbor = -1;
-        std::pair<int, int> edge; //stores the index of the vertices in oddDegreeVertices
-
-        if(!visited[i]){
-            for(int j = 0; j < oddDegreeVertices.size(); j++){
-                if(i != j && !visited[j]){
-                    double distance = getDistance(oddDegreeVertices[i], oddDegreeVertices[j]);
-                    if(distance < min_distance){
-                        min_distance = distance;
-                        nearest_neighbor = j;
-                        edge = std::make_pair(i, nearest_neighbor);
-                    }
-                }
-            }
-
-            if(mstGraph.getDistance(oddDegreeVertices[edge.first], oddDegreeVertices[edge.second]) == 0){
-                mpm.emplace_back(oddDegreeVertices[edge.first], oddDegreeVertices[edge.second]);
-                visited[edge.first] = true;
-                visited[edge.second] = true;
-            }
-
-        }
-    }
-
-    return mpm;
-}
-
-void Graph::addMpmEdgesToMst(const std::vector<std::pair<int, int>>& mpm, Graph &mstGraph) const{
-    for(auto & i : mpm){
-        double distance = haversine(findVertex(i.first)->getLatitude(), findVertex(i.first)->getLongitude(), findVertex(i.second)->getLatitude(), findVertex(i.second)->getLatitude());
-
-        if(distance == 0.0) mstGraph.addEdge(i.first, i.second, getDistance(i.first, i.second));
-        else mstGraph.addEdge(i.first, i.second, distance);
-    }
-}
-
-void Graph::getHamiltonianPath(const std::vector<int>& eulerian_path, std::vector<int> &hamiltonian_path){
-    for (int vertex : eulerian_path) {
-        auto it = std::find(hamiltonian_path.begin(), hamiltonian_path.end(), vertex);
-        if (it == hamiltonian_path.end()) hamiltonian_path.push_back(vertex);
-
-    }
-    hamiltonian_path.push_back(hamiltonian_path.front());
-}
-
+/************************************** 4.3 ***************************************/
 double Graph::haversine(double lat1, double lon1, double lat2, double lon2) {
     double dLat = (lat2 - lat1) * M_PI / 180.0;
     double dLon = (lon2 - lon1) * M_PI / 180.0;
@@ -424,3 +221,133 @@ double Graph::haversine(double lat1, double lon1, double lat2, double lon2) {
     return rad * c;
 }
 
+Graph Graph::minimumWeightPerfectMatching() {
+    Graph matching;
+    std::unordered_set<int> unmatched;
+    std::unordered_set<int> matched;
+
+    for (const auto& vertexPair : vertexSet) {
+        int id = vertexPair.first;
+        unmatched.insert(id);
+    }
+
+    while (!unmatched.empty()) {
+        int v = *(unmatched.begin());
+        unmatched.erase(v);
+
+        double minDistance = std::numeric_limits<double>::max();
+        int closestVertex = -1;
+
+        for (const auto& vertexPair : vertexSet) {
+            int id = vertexPair.first;
+            if (id != v && unmatched.count(id) > 0) {
+                Vertex* u = vertexPair.second;
+                double distance = haversine(vertexSet[v]->getLatitude(), vertexSet[v]->getLongitude(), u->getLatitude(), u->getLongitude());
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestVertex = id;
+                }
+            }
+        }
+
+        if (closestVertex != -1) {
+            unmatched.erase(closestVertex);
+            matched.insert(v);
+            matched.insert(closestVertex);
+            Vertex* v1 = findVertex(v);
+            Vertex* v2 = findVertex(closestVertex);
+            if (v1 != nullptr && v2 != nullptr) {
+                matching.addEdge(v1, v2, minDistance);
+                cout << "Entrou" << endl;
+                cout << matching.vertexSet.size() << endl;
+            }
+        }
+    }
+    return matching;
+}
+
+// Helper function to find the Eulerian circuit in a graph
+std::vector<int> Graph::findEulerianCircuit() {
+    std::vector<int> circuit;
+
+    if (vertexSet.empty())
+        return circuit;
+
+    std::unordered_map<int, std::vector<int>> adjacencyList;
+    for (const auto& vertexPair : vertexSet) {
+        int id = vertexPair.first;
+        const std::unordered_map<int, Edge*>& adjEdges = vertexPair.second->getAdj();
+        std::vector<int> neighbors;
+        for (const auto& edge : adjEdges)
+            neighbors.push_back(edge.second->getDestiny()->getId());
+        adjacencyList[id] = neighbors;
+    }
+
+    int startVertex = vertexSet.begin()->first;
+    std::stack<int> stack;
+    std::vector<int> circuitTemp;
+    stack.push(startVertex);
+
+    while (!stack.empty()) {
+        int v = stack.top();
+
+        if (!adjacencyList[v].empty()) {
+            stack.push(adjacencyList[v].back());
+            adjacencyList[v].pop_back();
+        } else {
+            circuitTemp.push_back(v);
+            stack.pop();
+        }
+    }
+
+    for (auto it = circuitTemp.rbegin(); it != circuitTemp.rend(); ++it)
+        circuit.push_back(*it);
+
+    return circuit;
+}
+
+// Christofides algorithm to find an approximate Hamiltonian path
+std::vector<int> Graph::christofides() {
+    std::vector<int> path;
+
+    // Step 1: Create the minimum-weight perfect matching
+    Graph matching = minimumWeightPerfectMatching();
+
+    // Step 2: Create a subgraph of odd-degree vertices from the matching
+    Graph subgraph;
+    std::unordered_set<int> oddDegreeVertices;
+
+    for (const auto& vertexPair : matching.getVertexSet()) {
+        int id = vertexPair.first;
+        Vertex* vertex = vertexPair.second;
+        if (vertex->getAdj().size() % 2 != 0) {
+            oddDegreeVertices.insert(id);
+            subgraph.addVertex(id, vertex->getLongitude(), vertex->getLongitude());
+        }
+    }
+
+    for (const auto& vertexPair : matching.getVertexSet()) {
+        Vertex* vertex = vertexPair.second;
+        const std::unordered_map<int, Edge*>& adjEdges = vertex->getAdj();
+        for (const auto& edge : adjEdges) {
+            int destId = edge.second->getDestiny()->getId();
+            if (oddDegreeVertices.count(destId) > 0) {
+                subgraph.addEdge(findVertex(vertexPair.first), edge.second->getDestiny(), edge.second->getDistance());
+            }
+        }
+    }
+
+    // Step 3: Find the Eulerian circuit in the subgraph
+    std::vector<int> circuit = subgraph.findEulerianCircuit();
+
+    // Step 4: Create the Hamiltonian path by removing repeated vertices
+    std::unordered_set<int> visited;
+    for (int vertex : circuit) {
+        if (visited.count(vertex) == 0) {
+            path.push_back(vertex);
+            visited.insert(vertex);
+        }
+    }
+
+    return path;
+}

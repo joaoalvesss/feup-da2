@@ -9,11 +9,11 @@
 
 class Edge;
 
-    /*** Vertex ***/
+/*** Vertex ***/
 
 class Vertex {
 public:
-    Vertex(int id, double latitude = 0.0, double longitude = 0.0);
+    Vertex(int id, double longitude = 0.0, double latitude = 0.0);
     bool operator<(Vertex & vertex) const;
 
     std::unordered_map<int, Edge *> getAdj();
@@ -48,7 +48,7 @@ protected:
     int dist;
 };
 
-    /*** Edge ***/
+/*** Edge ***/
 
 class Edge {
 public:

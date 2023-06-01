@@ -21,7 +21,7 @@ public:
     Vertex *findVertex(const int &id) const;
     void addVertex(const int &id, const double& lon = 0.0, const double& lat = 0.0);
     bool removeVertex(const int &id);
-    void addEdge(const int &source, const int &dest, double distance);
+    void addEdge(Vertex * source, Vertex * dest, double distance);
     void addBidirectionalEdge(const int &source, const int &dest, double distance);
     int getNumVertex() const;
     std::unordered_map<int, Vertex *> getVertexSet() const;
@@ -43,12 +43,18 @@ public:
     double getDistance(int v1, int v2) const;
     bool vertexExists(int vertexID);
 
+    /*
     std::vector<int> findOddDegreeVertices();
     void findEulerianPath(int start_vertex, std::vector<int> &circuit);
     void buildMstGraph(Graph &mstGraph, const std::vector<std::pair<int, int>>& mst) const;
     std::vector<std::pair<int, int>> findOddDegreeVerticesAndConnect(Graph &mstGraph) const;
     void addMpmEdgesToMst(const std::vector<std::pair<int, int>>& mpm, Graph &mstGraph) const;
     static void getHamiltonianPath(const std::vector<int>& eulerian_path, std::vector<int> &hamiltonian_path);
+    */
+
+    Graph minimumWeightPerfectMatching();
+    std::vector<int> findEulerianCircuit();
+    std::vector<int> christofides();
 
     static double haversine(double lat1, double lon1, double lat2, double lon2);
 

@@ -9,8 +9,8 @@ Menu::Menu(){
     graph = *new Graph();
     exitApplication = false;
     // utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/stadiums.csv");
-    // utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/shipping.csv");
-     utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/tourism.csv");
+    utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/shipping.csv");
+    // utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/tourism.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Extra_Fully_Connected_Graphs/edges_25.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Extra_Fully_Connected_Graphs/edges_50.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Extra_Fully_Connected_Graphs/edges_75.csv");
@@ -88,27 +88,9 @@ void Menu::init() {
             case 3:
             {
                 auto start_time = std::chrono::high_resolution_clock::now();
-                // Step 1: Build the minimum spanning tree (MST)
-                Graph mstGraph = graph.prim(0);
-
-                // Step 2: Find the odd degree vertices and connect them
-                std::vector<std::pair<int, int>> mpm = mstGraph.findOddDegreeVerticesAndConnect(mstGraph);
-
-                // Step 3: Add the edges from the MPM to the MST
-                mstGraph.addMpmEdgesToMst(mpm, mstGraph);
-
-                // Step 4: Find the Eulerian path in the MST
-                std::vector<int> eulerianPath;
-                mstGraph.findEulerianPath(0, eulerianPath);
-
-                // Print the Eulerian path
-                std::cout << "\t> Eulerian Path: ";
-                for (int vertex : eulerianPath) std::cout << vertex << " ";
-                std::cout << std::endl;
-
-                // Step 5: Build the Hamiltonian path
-                std::vector<int> hamiltonianPath;
-                Graph::getHamiltonianPath(eulerianPath, hamiltonianPath);
+                std::vector<int> hamiltonianPath = graph.christofides();
+                // Hamiltonian path starting and ending at node 0
+                hamiltonianPath.push_back(0);
 
                 auto end_time = std::chrono::high_resolution_clock::now();
                 auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);

@@ -2,10 +2,10 @@
 
 #include "../headers/vertexEdge.h"
 
-    /*** Vertex - Stations ***/
+/*** Vertex - Stations ***/
 
 
-Vertex::Vertex(int id, double latitude, double longitude){
+Vertex::Vertex(int id, double longitude, double latitude){
     this->id = id;
     this->latitude = latitude;
     this->longitude = longitude;
@@ -17,6 +17,10 @@ bool Vertex::operator<(Vertex & vertex) const {
 
 
 Edge * Vertex::addEdge(Vertex *destiny, Vertex *origin, double distance) {
+    if (destiny == nullptr || origin == nullptr) {
+        std::cout << "Invalid vertex pointer." << std::endl << std::endl;
+        return nullptr;
+    }
     auto newEdge = new Edge(origin, destiny, distance);
     adj.insert({adj.size()+1, newEdge});
     destiny->incoming.insert({adj.size(), newEdge});
@@ -95,7 +99,7 @@ void Vertex::setDist(int dist) {
 int Vertex::getDist() {
     return dist;
 }
-    /*** Edge - Network ***/
+/*** Edge - Network ***/
 
 Edge::Edge(Vertex *origin, Vertex *destiny, double distance){
     this->origin = origin;
