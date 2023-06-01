@@ -16,10 +16,10 @@ public:
     Vertex(int id, double latitude = 0.0, double longitude = 0.0);
     bool operator<(Vertex & vertex) const;
 
-    std::vector<Edge *> getAdj();
+    std::unordered_map<int, Edge *> getAdj();
     bool isVisited() const;
     Edge *getPath() const;
-    std::vector<Edge *> getIncoming() const;
+    std::unordered_map<int, Edge *> getIncoming() const;
     int getId() const;
 
     void setId(int id);
@@ -39,8 +39,8 @@ protected:
     double longitude;
 
     // outgoing and coming edges
-    std::vector<Edge *> adj;
-    std::vector<Edge *> incoming;
+    std::unordered_map<int, Edge *> adj;
+    std::unordered_map<int, Edge *> incoming;
 
     // auxiliary fields
     bool visited = false;

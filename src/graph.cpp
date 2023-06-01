@@ -10,12 +10,12 @@ bool Graph::removeVertex(const int &id){
     if (idx == -1) return false;
     Vertex *vertex = vertexSet[idx];
 
-    for (auto edge : vertex->getAdj()) {
-        Vertex *destVertex = edge->getDestiny();
+    for (auto it : vertex->getAdj()) {
+        Vertex *destVertex = it.second->getDestiny();
         destVertex->removeEdge(id);
     }
-    for (auto edge : vertex->getIncoming()) {
-        Vertex *origVertex = edge->getOrigin();
+    for (auto it : vertex->getIncoming()) {
+        Vertex *origVertex = it.second->getOrigin();
         origVertex->removeEdge(id);
     }
 
@@ -83,9 +83,9 @@ void Graph::tspBT(std::vector<int>& path, std::vector<bool>& visited, std::vecto
         if (path.size() == vertexSet.size()) {
             int start_vertex = path.front();
             int last_vertex = path.back();
-            for (auto edge : vertexSet[last_vertex]->getAdj()) {
-                if (edge->getDestiny()->getId() == start_vertex) {
-                    double cycle_cost = current_cost + edge->getDistance();
+            for (auto it : vertexSet[last_vertex]->getAdj()) {
+                if (it.second->getDestiny()->getId() == start_vertex) {
+                    double cycle_cost = current_cost + it.second->getDistance();
                     if (cycle_cost < min_cost) {
                         min_cost = cycle_cost;
                         optimal_path = path;
@@ -97,13 +97,13 @@ void Graph::tspBT(std::vector<int>& path, std::vector<bool>& visited, std::vecto
         }
 
         int last_vertex = path.back();
-        for (auto edge : vertexSet[last_vertex]->getAdj()) {
-            if (!visited[edge->getDestiny()->getId()]) {
-                path.push_back(edge->getDestiny()->getId());
-                visited[edge->getDestiny()->getId()] = true;
-                tspBT(path, visited, optimal_path, min_cost, current_cost + edge->getDistance());
+        for (auto it : vertexSet[last_vertex]->getAdj()) {
+            if (!visited[it.second->getDestiny()->getId()]) {
+                path.push_back(it.second->getDestiny()->getId());
+                visited[it.second->getDestiny()->getId()] = true;
+                tspBT(path, visited, optimal_path, min_cost, current_cost + it.second->getDistance());
                 path.pop_back();
-                visited[edge->getDestiny()->getId()] = false;
+                visited[it.second->getDestiny()->getId()] = false;
             }
         }
 }
@@ -126,12 +126,12 @@ void Graph::tspBT(std::vector<int>& path, std::vector<bool>& visited, std::vecto
     while (!q.empty()) {
         Vertex *vl = q.extractMin();
         vl->setVisited(true);
-        for (auto e : vl->getAdj()) {
-            if (!e->getDestiny()->isVisited()) {
-                if (e->getDestiny()->getDist() > vl->getDist() + e->getDistance()) {
-                    e->getDestiny()->setDist(vl->getDist() + e->getDistance());
-                    e->getDestiny()->setPath(e);
-                    q.insert(e->getDestiny());
+        for (auto it : vl->getAdj()) {
+            if (!it.second->getDestiny()->isVisited()) {
+                if (it.second->getDestiny()->getDist() > vl->getDist() + it.second->getDistance()) {
+                    it.second->getDestiny()->setDist(vl->getDist() + it.second->getDistance());
+                    it.second->getDestiny()->setPath(it.second);
+                    q.insert(it.second->getDestiny());
                 }
             }
         }
@@ -157,9 +157,9 @@ std::vector<int> Graph::dfs(int id) {
     Vertex *src = findVertex(id);
     res.push_back(id);
     src->setVisited(true);
-    for (auto edg : src->getAdj()) {
-        if (!edg->getDestiny()->isVisited()) {
-            std::vector<int> a = dfs(edg->getDestiny()->getId());
+    for (auto it : src->getAdj()) {
+        if (!it.second->getDestiny()->isVisited()) {
+            std::vector<int> a = dfs(it.second->getDestiny()->getId());
             for (int i : a) {
                 res.push_back(i);
             }
@@ -214,9 +214,9 @@ double Graph::calculateTotalDistance(const std::vector<int> &path) {
             continue;
         }
 
-        for (auto edge : v1->getAdj()) {
-            if (edge->getDestiny() == v2) {
-                totalDistance += edge->getDistance();
+        for (auto it : v1->getAdj()) {
+            if (it.second->getDestiny() == v2) {
+                totalDistance += it.second->getDistance();
                 break;
             }
         }
@@ -226,8 +226,8 @@ double Graph::calculateTotalDistance(const std::vector<int> &path) {
 }
 
 bool Graph::check_if_nodes_are_connected(int v1, int v2) const{
-    for(const auto& edge : findVertex(v1)->getAdj()){
-        if(edge->getDestiny()->getId() == v2)
+    for(const auto& it : findVertex(v1)->getAdj()){
+        if(it.second->getDestiny()->getId() == v2)
             return true;
         }
     return false;
@@ -235,9 +235,9 @@ bool Graph::check_if_nodes_are_connected(int v1, int v2) const{
 
     /************************************** 4.3 ***************************************/
 double Graph::getDistance(int v1, int v2) const {
-    for(auto &edge : vertexSet.find(v1)->second->getAdj()) {
-        if(edge->getDestiny()->getId() == v2) {
-            return edge->getDistance();
+    for(auto &it : vertexSet.find(v1)->second->getAdj()) {
+        if(it.second->getDestiny()->getId() == v2) {
+            return it.second->getDistance();
         }
     }
     return 0;
@@ -272,11 +272,11 @@ void Graph::findEulerianPath(int start_vertex, std::vector<int> &circuit){
     while (!stack.empty()) {
         int current_vertex = stack.top();
 
-        for(auto edge : findVertex(current_vertex)->getAdj()){
-            std::cout <<  "\t" << edge->getOrigin()->getId() << " -> " << edge->getDestiny()->getId() << ": dist -> " << edge->getDistance() << endl;
+        for(auto it : findVertex(current_vertex)->getAdj()){
+            std::cout <<  "\t" << it.second->getOrigin()->getId() << " -> " << it.second->getDestiny()->getId() << ": dist -> " << it.second->getDistance() << endl;
         }
 
-        if (!vertexSet[current_vertex]->getAdj().empty()) {
+        /*if (!vertexSet[current_vertex]->getAdj().empty()) {
             int next_vertex = vertexSet[current_vertex]->getAdj().back()->getDestiny()->getId();
             vertexSet[current_vertex]->getAdj().pop_back();
             stack.push(next_vertex);
@@ -284,7 +284,7 @@ void Graph::findEulerianPath(int start_vertex, std::vector<int> &circuit){
         else {
             circuit.push_back(current_vertex);
             stack.pop();
-        }
+        }*/ // ERRO COM O unordered map
         cout << "\t> CIRCUIT: " << circuit.size() << endl;
         cout << "\t> STACK: " << stack.size() << endl;
     }

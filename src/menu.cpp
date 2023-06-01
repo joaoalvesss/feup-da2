@@ -8,9 +8,9 @@ Graph Menu::graph;
 Menu::Menu(){
     graph = *new Graph();
     exitApplication = false;
-    utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/stadiums.csv");
+    // utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/stadiums.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/shipping.csv");
-    // utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/tourism.csv");
+     utils::readCsvData_OneFile(graph, "../resources/Toy-Graphs/tourism.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Extra_Fully_Connected_Graphs/edges_25.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Extra_Fully_Connected_Graphs/edges_50.csv");
     // utils::readCsvData_OneFile(graph, "../resources/Extra_Fully_Connected_Graphs/edges_75.csv");

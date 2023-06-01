@@ -18,8 +18,8 @@ bool Vertex::operator<(Vertex & vertex) const {
 
 Edge * Vertex::addEdge(Vertex *destiny, Vertex *origin, double distance) {
     auto newEdge = new Edge(origin, destiny, distance);
-    adj.push_back(newEdge);
-    destiny->incoming.push_back(newEdge);
+    adj.insert({adj.size()+1, newEdge});
+    destiny->incoming.insert({adj.size(), newEdge});
     return newEdge;
 }
 
@@ -29,16 +29,16 @@ Edge * Vertex::removeEdge(int destID) {
     Edge *res;
     bool found = false;
     while (it != adj.end()) {
-        Edge *edge = *it;
+        Edge *edge = it->second;
         Vertex *dest = edge->getDestiny();
         if (dest->getId() == destID) {
-            res = new Edge((*it)->getOrigin(), (*it)->getDestiny(), (*it)->getDistance());
+            res = new Edge((*it).second->getOrigin(), (*it).second->getDestiny(), (*it).second->getDistance());
             found = true;
             it = adj.erase(it);
             // Also remove the corresponding edge from the incoming list
             auto it2 = dest->incoming.begin();
             while (it2 != dest->incoming.end()) {
-                if ((*it2)->getOrigin()->getId() == id) {
+                if ((*it2).second->getOrigin()->getId() == id) {
                     it2 = dest->incoming.erase(it2);
                 }
                 else {
@@ -56,7 +56,7 @@ Edge * Vertex::removeEdge(int destID) {
     return res;
 }
 
-std::vector<Edge*> Vertex::getAdj(){
+std::unordered_map<int, Edge *> Vertex::getAdj(){
     return this->adj;
 }
 
@@ -68,7 +68,7 @@ Edge *Vertex::getPath() const {
     return this->path;
 }
 
-std::vector<Edge *> Vertex::getIncoming() const {
+std::unordered_map<int, Edge *> Vertex::getIncoming() const {
     return this->incoming;
 }
 
