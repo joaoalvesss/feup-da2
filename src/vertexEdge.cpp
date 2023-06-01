@@ -17,9 +17,15 @@ bool Vertex::operator<(Vertex & vertex) const {
 
 
 Edge * Vertex::addEdge(Vertex *destiny, Vertex *origin, double distance) {
-    auto newEdge = new Edge(origin, destiny, distance);
+    /*auto newEdge = new Edge(origin, destiny, distance);
     adj.insert({adj.size()+1, newEdge});
     destiny->incoming.insert({adj.size(), newEdge});
+    return newEdge;*/
+
+    auto newEdge = new Edge(origin, destiny, distance);
+    adj_size++; incoming_size++;
+    adj.insert({adj_size, newEdge});
+    destiny->incoming.insert({incoming_size, newEdge});
     return newEdge;
 }
 

@@ -37,6 +37,8 @@ protected:
     int id;
     double latitude;
     double longitude;
+    int adj_size;
+    int incoming_size;
 
     // outgoing and coming edges
     std::unordered_map<int, Edge *> adj;

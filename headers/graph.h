@@ -21,8 +21,8 @@ public:
     Vertex *findVertex(const int &id) const;
     void addVertex(const int &id, const double& lon = 0.0, const double& lat = 0.0);
     bool removeVertex(const int &id);
-    void addEdge(const int &source, const int &dest, double distance);
-    void addBidirectionalEdge(const int &source, const int &dest, double distance);
+    void addEdge(const int &source, const int &dest, double distance) const;
+    void addBidirectionalEdge(const int &source, const int &dest, double distance) const;
     int getNumVertex() const;
     std::unordered_map<int, Vertex *> getVertexSet() const;
     void resetVisits();
@@ -35,23 +35,21 @@ public:
     Graph prim(int s);
     std::vector<int> dfs(int id);
     double triangularApproximation(std::vector<int> &path);
-    double calculateTotalDistance(const std::vector<int> &path);
+    double calculateTotalDistance(const std::vector<int> &path) const;
     bool check_if_nodes_are_connected(int v1, int v2) const;
 
 
     /** 4.3 **/
-    double getDistance(int v1, int v2) const;
-    bool vertexExists(int vertexID);
-
-    std::vector<int> findOddDegreeVertices();
-    void findEulerianPath(int start_vertex, std::vector<int> &circuit);
-    void buildMstGraph(Graph &mstGraph, const std::vector<std::pair<int, int>>& mst) const;
-    std::vector<std::pair<int, int>> findOddDegreeVerticesAndConnect(Graph &mstGraph) const;
-    void addMpmEdgesToMst(const std::vector<std::pair<int, int>>& mpm, Graph &mstGraph) const;
-    static void getHamiltonianPath(const std::vector<int>& eulerian_path, std::vector<int> &hamiltonian_path);
-
     static double haversine(double lat1, double lon1, double lat2, double lon2);
+    std::vector<int> christofides();
+    std::vector<int> findEulerianCircuit();
+    Graph minimumWeightPerfectMatching();
 
+    Graph findMinimumWeightedPerfectMatching(Graph& graph);
+    std::vector<int> performEulerianTour(Graph& graph);
+    std::vector<int> removeDuplicateVertices(const std::vector<int>& path);
+    std::vector<int> constructHamiltonianPath(const std::vector<int>& eulerianPath);
+    std::vector<int> christofidesAlgorithm(Graph& graph);
 protected:
     std::unordered_map<int, Vertex *> vertexSet;
     int findVertexIdx(const int &id) const;
