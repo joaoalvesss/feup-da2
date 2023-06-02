@@ -1,6 +1,5 @@
 #include "../headers/graph.h"
 #include "../headers/utils.h"
-#include "../headers/MutablePriorityQueue.h"
 #include <cmath>
 
 Graph::Graph(){}
@@ -63,9 +62,11 @@ void Graph::addEdge(const int &source, const int &dest, double distance) const {
     Vertex* v1 = findVertex(source);
     Vertex* v2 = findVertex(dest);
     if(v1 == nullptr || v2 == nullptr){
-        cout << "Invalid mem" << endl;
+        return;
     }
-    v1->addEdge(v2, v1, distance);
+    else{
+        v1->addEdge(v2, v1, distance);
+    }
 }
 
 void Graph::addBidirectionalEdge(const int &source, const int &dest, double distance) const {
@@ -83,37 +84,37 @@ void Graph::resetVisits() {
     }
 }
 
-    /************************************** 4.1 ***************************************/
+/************************************** 4.1 ***************************************/
 void Graph::tspBT(std::vector<int>& path, std::vector<bool>& visited, std::vector<int>& optimal_path, double& min_cost, double current_cost) {
-        if (path.size() == vertexSet.size()) {
-            int start_vertex = path.front();
-            int last_vertex = path.back();
-            for (auto it : vertexSet[last_vertex]->getAdj()) {
-                if (it.second->getDestiny()->getId() == start_vertex) {
-                    double cycle_cost = current_cost + it.second->getDistance();
-                    if (cycle_cost < min_cost) {
-                        min_cost = cycle_cost;
-                        optimal_path = path;
-                    }
-                    break;
-                }
-            }
-            return;
-        }
-
+    if (path.size() == vertexSet.size()) {
+        int start_vertex = path.front();
         int last_vertex = path.back();
         for (auto it : vertexSet[last_vertex]->getAdj()) {
-            if (!visited[it.second->getDestiny()->getId()]) {
-                path.push_back(it.second->getDestiny()->getId());
-                visited[it.second->getDestiny()->getId()] = true;
-                tspBT(path, visited, optimal_path, min_cost, current_cost + it.second->getDistance());
-                path.pop_back();
-                visited[it.second->getDestiny()->getId()] = false;
+            if (it.second->getDestiny()->getId() == start_vertex) {
+                double cycle_cost = current_cost + it.second->getDistance();
+                if (cycle_cost < min_cost) {
+                    min_cost = cycle_cost;
+                    optimal_path = path;
+                }
+                break;
             }
         }
+        return;
+    }
+
+    int last_vertex = path.back();
+    for (auto it : vertexSet[last_vertex]->getAdj()) {
+        if (!visited[it.second->getDestiny()->getId()]) {
+            path.push_back(it.second->getDestiny()->getId());
+            visited[it.second->getDestiny()->getId()] = true;
+            tspBT(path, visited, optimal_path, min_cost, current_cost + it.second->getDistance());
+            path.pop_back();
+            visited[it.second->getDestiny()->getId()] = false;
+        }
+    }
 }
 
-    /************************************** 4.2 ***************************************/
+/************************************** 4.2 ***************************************/
 Graph Graph::prim(int s) {
     Vertex * start = findVertex(s);
     MutablePriorityQueue<Vertex> q;
@@ -194,11 +195,12 @@ double Graph::calculateTotalDistance(const std::vector<int> &path) const {
             totalDistance += haversine(v1->getLatitude(), v1->getLongitude(), v2->getLatitude(), v2->getLongitude());
             continue;
         }
-
-        for (auto it : v1->getAdj()) {
-            if (it.second->getDestiny() == v2) {
-                totalDistance += it.second->getDistance();
-                break;
+        else {
+            for (auto it: v1->getAdj()) {
+                if (it.second->getDestiny() == v2) {
+                    totalDistance += it.second->getDistance();
+                    break;
+                }
             }
         }
     }
@@ -207,14 +209,15 @@ double Graph::calculateTotalDistance(const std::vector<int> &path) const {
 }
 
 bool Graph::check_if_nodes_are_connected(int v1, int v2) const{
-    for(const auto& it : findVertex(v1)->getAdj()){
+    Vertex* vertex = findVertex(v1);
+    for(const auto& it : vertex->getAdj()){
         if(it.second->getDestiny()->getId() == v2)
             return true;
-        }
+    }
     return false;
 }
 
-    /************************************** 4.3 ***************************************/
+/************************************** 4.3 ***************************************/
 double Graph::haversine(double lat1, double lon1, double lat2, double lon2) {
     double dLat = (lat2 - lat1) * M_PI / 180.0;
     double dLon = (lon2 - lon1) * M_PI / 180.0;
@@ -263,16 +266,10 @@ Graph Graph::minimumWeightPerfectMatching() {
             matched.insert(closestVertex);
             matching.addVertex(v, vertexSet[v]->getLongitude(), vertexSet[v]->getLatitude());
             matching.addVertex(closestVertex, vertexSet[closestVertex]->getLongitude(), vertexSet[closestVertex]->getLatitude());
-            matching.addEdge(v, closestVertex, minDistance);
+            matching.addBidirectionalEdge(v, closestVertex, minDistance);
         }
     }
 
-    cout << "\tMatching vertexes: ";
-    for(auto aux : matching.vertexSet){
-        cout << aux.second->getId() << " ";
-    }
-
-    cout << endl;
     return matching;
 }
 
@@ -296,7 +293,7 @@ std::vector<int> Graph::findEulerianCircuit() {
     std::stack<int> stack;
     std::vector<int> eulerianPath;
 
-    int startVertex = vertexSet.begin()->first;
+    int startVertex = 0;
     stack.push(startVertex);
 
     while (!stack.empty()) {
@@ -319,18 +316,13 @@ std::vector<int> Graph::findEulerianCircuit() {
 }
 
 
-// Christofides algorithm to find an approximate Hamiltonian path
+
 std::vector<int> Graph::christofides() {
     std::vector<int> path;
-
-    // Step 1: Create the minimum-weight perfect matching
-    Graph matching = minimumWeightPerfectMatching();
-
-    // Step 2: Create a subgraph of odd-degree vertices from the matching
     Graph subgraph;
     std::unordered_set<int> oddDegreeVertices;
 
-    for (const auto& vertexPair : matching.getVertexSet()) {
+    for (const auto& vertexPair : vertexSet) {
         int id = vertexPair.first;
         Vertex* vertex = vertexPair.second;
         if (vertex->getAdj().size() % 2 != 0) {
@@ -339,7 +331,7 @@ std::vector<int> Graph::christofides() {
         }
     }
 
-    for (const auto& vertexPair : matching.getVertexSet()) {
+    for (const auto& vertexPair : vertexSet) {
         Vertex* vertex = vertexPair.second;
         const std::unordered_map<int, Edge*>& adjEdges = vertex->getAdj();
         for (const auto& edge : adjEdges) {
@@ -350,16 +342,19 @@ std::vector<int> Graph::christofides() {
         }
     }
 
-    cout << "\tSubgraph vertexes before insert: ";
-    for(auto aux : subgraph.vertexSet){
-        cout << aux.second->getId() << " ";
-    }
-    cout << endl;
+    Graph matching = subgraph.minimumWeightPerfectMatching();
 
-    // Step 3: Find the Eulerian circuit in the subgraph
+    for(auto vertex : vertexSet){
+        for(auto edge : vertex.second->getAdj()){
+            subgraph.addVertex(edge.second->getOrigin()->getId(), edge.second->getOrigin()->getLongitude(), edge.second->getOrigin()->getLatitude());
+            subgraph.addVertex(edge.second->getDestiny()->getId(), edge.second->getDestiny()->getLongitude(), edge.second->getDestiny()->getLatitude());
+            subgraph.addBidirectionalEdge(edge.second->getOrigin()->getId(), edge.second->getDestiny()->getId(), edge.second->getDistance());
+        }
+    }
+
     std::vector<int> circuit = subgraph.findEulerianCircuit();
 
-    // Step 4: Create the Hamiltonian path by removing repeated vertices
+
     std::unordered_set<int> visited;
     for (int vertex : circuit) {
         if (visited.count(vertex) == 0) {

@@ -5,6 +5,10 @@ void utils::readCsvData_OneFile(Graph &graph, const std::string &path) {
     std::ifstream stops(path);
 
     std::string line;
+    if (!stops.is_open()) {
+        std::cout << "Failed to open the file." << std::endl;
+        return;
+    }
     getline(stops, line);
     while (getline(stops, line)) {
         std::stringstream ss(line);
@@ -25,19 +29,17 @@ void utils::readCsvData_OneFile(Graph &graph, const std::string &path) {
 }
 
 void utils::readCsvData_TwoFile(Graph &graph, const std::string &path) {
-    std::string e = path + "edges.csv";
     std::string n = path + "nodes.csv";
-
     std::ifstream nodes(n);
-    std::ifstream edges(e);
+    std::string line1;
 
-    std::string line;
-
-    getline(nodes, line);
-    getline(edges, line);
-
-    while (getline(nodes, line)) { // NODES
-        std::stringstream ss(line);
+    if (!nodes.is_open()) {
+        std::cout << "Failed to open the nodes file." << std::endl;
+        return;
+    }
+    getline(nodes, line1);
+    while (getline(nodes, line1)) { // NODES
+        std::stringstream ss(line1);
         std::string idStr, lonStr, latStr;
 
         getline(ss, idStr, ',');
@@ -51,8 +53,18 @@ void utils::readCsvData_TwoFile(Graph &graph, const std::string &path) {
         graph.addVertex(id, lon, lat);
     }
 
-    while (getline(edges, line)) { // EDGES
-        std::stringstream ss(line);
+    std::string e = path + "edges.csv";
+    std::ifstream edges(e);
+    std::string line2;
+
+    if (!edges.is_open()) {
+        std::cout << "Failed to open the edges file." << std::endl;
+        return;
+    }
+    getline(edges, line2);
+
+    while (getline(edges, line2)) { // EDGES
+        std::stringstream ss(line2);
         std::string originStr, destinyStr, distanceStr;
 
         getline(ss, originStr, ',');

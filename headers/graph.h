@@ -45,11 +45,6 @@ public:
     std::vector<int> findEulerianCircuit();
     Graph minimumWeightPerfectMatching();
 
-    Graph findMinimumWeightedPerfectMatching(Graph& graph);
-    std::vector<int> performEulerianTour(Graph& graph);
-    std::vector<int> removeDuplicateVertices(const std::vector<int>& path);
-    std::vector<int> constructHamiltonianPath(const std::vector<int>& eulerianPath);
-    std::vector<int> christofidesAlgorithm(Graph& graph);
 protected:
     std::unordered_map<int, Vertex *> vertexSet;
     int findVertexIdx(const int &id) const;
