@@ -191,7 +191,7 @@ double Graph::calculateTotalDistance(const std::vector<int> &path) const {
         Vertex *v1 = findVertex(path[i]);
         Vertex *v2 = findVertex(path[i+1]);
 
-        if(!check_if_nodes_are_connected(path[i], path[i+1])){
+        if(!checkConnectedNodes(path[i], path[i+1])){
             totalDistance += haversine(v1->getLatitude(), v1->getLongitude(), v2->getLatitude(), v2->getLongitude());
             continue;
         }
@@ -208,7 +208,7 @@ double Graph::calculateTotalDistance(const std::vector<int> &path) const {
     return totalDistance;
 }
 
-bool Graph::check_if_nodes_are_connected(int v1, int v2) const{
+bool Graph::checkConnectedNodes(int v1, int v2) const {
     Vertex* vertex = findVertex(v1);
     for(const auto& it : vertex->getAdj()){
         if(it.second->getDestiny()->getId() == v2)

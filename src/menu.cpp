@@ -111,7 +111,7 @@ void Menu::init() {
                 cout << "\t> [17] Real-world -> Graph2\n";
                 cout << "\t> [18] Real-world -> Graph3\n";
                 cout << "\t,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n\n";
-                cout << "\t> Enter the number of file: ";
+                cout << "\t> Enter the number of wanted file: ";
                 string path;
                 std::cin >> path;
                 graph = Graph();
